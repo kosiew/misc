@@ -154,7 +154,7 @@
         const MONTH_MONITOR_MILISECONDS = 0.5 * 60 * 1000;
         const NOTIFICATION_TIMEOUT_MILISECONDS = 3000;
         const SCROLL_OFFSET = 20;
-        const NOTIFY_ONLY_IF_AVAILABLE = false;
+        const NOTIFY_ONLY_IF_AVAILABLE = true;
         const labelMonitor = 'Monitor months';
         const labelStopMonitor = 'Stop monitor months';
         const toggleButton = $(`<button id="monitor-months">${labelMonitor}</button>`);
