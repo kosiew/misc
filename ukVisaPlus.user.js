@@ -153,7 +153,8 @@
         const INTERVAL_MILISECONDS = INTERVAL_MINUTES * 60 * 1000;
         const MONTH_MONITOR_MILISECONDS = 0.5 * 60 * 1000;
         const NOTIFICATION_TIMEOUT_MILISECONDS = 3000;
-        const NOTIFY_ONLY_IF_AVAILABLE = true;
+        const SCROLL_OFFSET = 20;
+        const NOTIFY_ONLY_IF_AVAILABLE = false;
         const labelMonitor = 'Monitor months';
         const labelStopMonitor = 'Stop monitor months';
         const toggleButton = $(`<button id="monitor-months">${labelMonitor}</button>`);
@@ -193,6 +194,11 @@
             GM_setValue(KEY_END_MONTH, endMonth);
             return endMonth;
         }
+        function scrollToAnchor(aid){
+            let aTag = $("#"+ aid);
+            let top = aTag.offset().top - SCROLL_OFFSET;
+            $('html,body').animate({scrollTop: top}, 'slow');
+        }
 
         function monitorMonth(month) {
             if (isMonitoring()) {
@@ -202,6 +208,8 @@
                 if (loaderOverlay.length > 0) {
                     location.reload();
                 }
+
+                scrollToAnchor('monitor-months');                
 
                 const daysInMonth = getDaysInMonth(month);
 
@@ -235,6 +243,7 @@
                 const rightArrow = $('.arrow-right-icon');
                 rightArrow.click();
             }
+            scrollToAnchor('monitor-months');
         }
 
         function isMonitoring() {
