@@ -14,6 +14,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_notification
+// @updateURL    https://github.com/kosiew/misc/raw/main/ukVisaPlus.user.js
 // ==/UserScript==
 
 ;(function($){ //function to create private scope with $ parameter
