@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.22
+// @version      1.23
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -143,6 +143,41 @@
     
 // ---- generic template code end ---    
 
+    const timer = (function () {
+        let loop;
+
+        let timerElement;
+
+        function register(element) {
+            timerElement = element;
+        }
+
+        function start(action, timerSeconds) {
+            let elapsedSeconds = timerSeconds;
+            loop =  setInterval(
+                () => {
+                    elapsedSeconds--;
+                    timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
+                    if (elapsedSeconds == 0) {
+                        clearInterval(loop);
+                    }
+                },
+                1000
+            );
+        }
+
+        function stop() {
+            clearInterval(loop);
+            timerElement.text('Status: Stopped monitoring')
+        }
+        
+        return {
+            start,
+            stop,
+            register,
+        };
+    })();
+
     const visa = (function () {
         const KEY_MONITOR = 'MONITOR';
         const KEY_END_MONTH = 'END_MONTH';
@@ -163,8 +198,11 @@
         const inputEndMonth = $(`<input type="text" size="20" value="${DEFAULT_END_MONTH}" id="end-month" name="end_month" />`);
         const nextActionElement = $('<h4></h4>');
         const logMessageElement = $('<h5></h5>');
+        const timerElement = $('<h5></h5>');
         const logMessages = [];
         const MAX_LOG_MESSAGES = 5;
+
+        timer.register(timerElement);
 
         toggleButton.click( () => {
             const value = getMonitorValue();
@@ -173,17 +211,24 @@
             setButtonLabel();
             if (isMonitoring()) {
                 monitorMonths();
+            } else {
+                timer.stop();
             }
         });
+
+
 
         function setEndMonth() {
             const endMonth = _gm_getValue(KEY_END_MONTH, DEFAULT_END_MONTH);
             inputEndMonth.val(endMonth);
         }
-        
-        function _setTimeout(message, f, timeout) {
-            nextActionElement.text(message);
-            setTimeout(
+       
+
+        function _setTimeout(action, f, timeout) {
+            const _message = `${action} after ${timeout/1000} seconds`;
+            nextActionElement.text(action);
+            timer.start(action, timeout/1000);
+            timerLoop = setTimeout(
                 () => {
                     nextActionElement.text('');
                     f();
@@ -273,26 +318,23 @@
                 monitorMonth(month);
 
                 if (month == endMonth) {
-                    const message = `reloading after ${LONG_WAIT_MILISECONDS}`;
-                    d.log(message);
+                    const action = `reloading`;
                     _setTimeout(
-                        message,
+                        action,
                         () => {
                             location.reload();
                         },
                         LONG_WAIT_MILISECONDS
                     );
                 } else {
-                    const message = `clickNextMonth after ${CLICK_NEXT_MONTH_WAIT_MILISECONDS}`;
-                    d.log(message);
+                    const action = `clickNextMonth`;
                     _setTimeout(
-                        message,
+                        action,
                         () => {
                             clickNextMonth();
-                            const message = `monitorMonths after ${DEFAULT_WAIT_MILISECONDS}`;
-                            d.log(message);
+                            const action = `monitorMonths`;
                             _setTimeout(
-                                message,
+                                action,
                                 () => {
                                     monitorMonths();
                                 }, 
@@ -339,6 +381,7 @@
             toggleButton.after(inputEndMonth);
             inputEndMonth.after(nextActionElement);
             nextActionElement.after(logMessageElement);
+            logMessageElement.after(timerElement);
             setButtonLabel();
             setEndMonth();
         }
@@ -367,3 +410,5 @@
 // . clickNextMonth shorter wait
 // version 1.22
 // . added LONG_WAIT for reload
+// version 1.23
+// . added elapsedSeconds
