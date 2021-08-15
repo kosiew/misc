@@ -168,7 +168,9 @@
             const newValue = value == VALUE_MONITOR_TRUE ? VALUE_MONITOR_FALSE : VALUE_MONITOR_TRUE;
             GM_setValue(KEY_MONITOR, newValue);
             setButtonLabel();
-            monitorMonths();
+            if (isMonitoring()) {
+                monitorMonths();
+            }
         });
 
         function setEndMonth() {
