@@ -19,6 +19,12 @@
 
 ;(function($){ //function to create private scope with $ parameter
 
+    $.fn.multiline = function(text){
+        this.text(text);
+        this.html(this.html().replace(/\n/g,'<br/>'));
+        return this;
+    }
+
 // ---- generic template code start ---    
     const d = (function () {
         const debug = true;
@@ -44,6 +50,7 @@
                 
                 const _styles = styles.join(';');
                 console.log(`%c ${message}`, _styles);        }
+                visa.setLogMessage(message);
         }
     
         function group(groupName = 'default') {
@@ -146,12 +153,15 @@
         const INTERVAL_MILISECONDS = INTERVAL_MINUTES * 60 * 1000;
         const MONTH_MONITOR_MILISECONDS = 0.5 * 60 * 1000;
         const NOTIFICATION_TIMEOUT_MILISECONDS = 3000;
-        const NOTIFY_ONLY_IF_AVAILABLE = false;
+        const NOTIFY_ONLY_IF_AVAILABLE = true;
         const labelMonitor = 'Monitor months';
         const labelStopMonitor = 'Stop monitor months';
         const toggleButton = $(`<button id="monitor-months">${labelMonitor}</button>`);
         const inputEndMonth = $(`<input type="text" size="20" value="${DEFAULT_END_MONTH}" id="end-month" name="end_month" />`);
-        const nextAction = $('<h4></h4>');
+        const nextActionElement = $('<h4></h4>');
+        const logMessageElement = $('<h5></h5>');
+        const logMessages = [];
+        const MAX_LOG_MESSAGES = 5;
 
         toggleButton.click( () => {
             const value = getMonitorValue();
@@ -167,10 +177,10 @@
         }
         
         function _setTimeout(message, f, timeout) {
-            nextAction.text(message);
+            nextActionElement.text(message);
             setTimeout(
                 () => {
-                    nextAction.text('');
+                    nextActionElement.text('');
                     f();
                 }
                 , timeout);
@@ -292,12 +302,22 @@
             const ed = new Date(d.getYear(), d.getMonth()+1, 0).getDate();
             return ed;
         }
+
+        function setLogMessage(message) {
+            if (logMessages.length > MAX_LOG_MESSAGES) {
+                logMessages.shift();
+            }
+            logMessages.push(message);
+            const messages = logMessages.join('\n');
+            logMessageElement.multiline(messages);
+        }
     
         function addToggleButton() {
             const h2 = $('.vas-container h2');
             h2.after(toggleButton);
             toggleButton.after(inputEndMonth);
-            inputEndMonth.after(nextAction);
+            inputEndMonth.after(nextActionElement);
+            nextActionElement.after(logMessageElement);
             setButtonLabel();
             setEndMonth();
         }
@@ -305,6 +325,7 @@
         return {
             addToggleButton,
             monitorMonths,
+            setLogMessage,
         };
     })();
 
