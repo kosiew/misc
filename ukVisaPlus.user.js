@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.2
+// @version      1.22
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -150,8 +150,10 @@
         const VALUE_MONITOR_TRUE = 'MONITOR_YES';
         const VALUE_MONITOR_FALSE = 'MONITOR_NO';
         const INTERVAL_MINUTES = 10;
-        const INTERVAL_MILISECONDS = INTERVAL_MINUTES * 60 * 1000;
-        const MONTH_MONITOR_MILISECONDS = 0.5 * 60 * 1000;
+        const SHORT_WAIT_MILISECONDS = 10000;
+        const DEFAULT_WAIT_MILISECONDS =  30000;
+        const LONG_WAIT_MILISECONDS = 5*DEFAULT_WAIT_MILISECONDS;
+        const CLICK_NEXT_MONTH_WAIT_MILISECONDS = DEFAULT_WAIT_MILISECONDS;
         const NOTIFICATION_TIMEOUT_MILISECONDS = 3000;
         const SCROLL_OFFSET = 20;
         const NOTIFY_ONLY_IF_AVAILABLE = true;
@@ -200,39 +202,43 @@
             $('html,body').animate({scrollTop: top}, 'slow');
         }
 
+        function isLoading() {
+            const loaderOverlay = $('#dvLoader.show');
+            return loaderOverlay.length > 0;
+        }
+
         function monitorMonth(month) {
             if (isMonitoring()) {
                 d.log(`monitorMonth ${month}`);
 
-                const loaderOverlay = $('#dvLoader.show');
-                if (loaderOverlay.length > 0) {
+                if (isLoading()) {
                     location.reload();
-                }
+                } else {
+                    scrollToAnchor('monitor-months');                
 
-                scrollToAnchor('monitor-months');                
+                    const daysInMonth = getDaysInMonth(month);
 
-                const daysInMonth = getDaysInMonth(month);
+                    const unavailableDayElements = $('td .day.unavailable_service');
+                    const unavailableDays = unavailableDayElements.length;
+                    const availableDays = daysInMonth - unavailableDays;
+                    d.log(`${month} - ${daysInMonth} daysInMonth - ${unavailableDays} unavailable days`);
+                    const message = `${month} - there are ${availableDays} days with available appointments`;
+                    d.log(message);
 
-                const unavailableDayElements = $('td .day.unavailable_service');
-                const unavailableDays = unavailableDayElements.length;
-                const availableDays = daysInMonth - unavailableDays;
-                d.log(`${month} - ${daysInMonth} daysInMonth - ${unavailableDays} unavailable days`);
-                const message = `${month} - there are ${availableDays} days with available appointments`;
-                d.log(message);
+                    const notify = (NOTIFY_ONLY_IF_AVAILABLE && availableDays > 0) || !NOTIFY_ONLY_IF_AVAILABLE;
 
-                const notify = (NOTIFY_ONLY_IF_AVAILABLE && availableDays > 0) || !NOTIFY_ONLY_IF_AVAILABLE;
-
-                if (notify) {
-                    GM_notification ( {
-                        title: 'Monitor Visa appointments', 
-                        text: message, 
-                        image: 'https://i.stack.imgur.com/geLPT.png',
-                        timeout: NOTIFICATION_TIMEOUT_MILISECONDS,
-                        onclick: () => {
-                                console.log ("My notice was clicked.");
-                                window.focus ();
-                        }
-                    } );
+                    if (notify) {
+                        GM_notification ( {
+                            title: 'Monitor Visa appointments', 
+                            text: message, 
+                            image: 'https://i.stack.imgur.com/geLPT.png',
+                            timeout: NOTIFICATION_TIMEOUT_MILISECONDS,
+                            onclick: () => {
+                                    console.log ("My notice was clicked.");
+                                    window.focus ();
+                            }
+                        } );
+                    }
                 }
             }
 
@@ -267,33 +273,33 @@
                 monitorMonth(month);
 
                 if (month == endMonth) {
-                    const message = `reloading after ${MONTH_MONITOR_MILISECONDS}`;
+                    const message = `reloading after ${LONG_WAIT_MILISECONDS}`;
                     d.log(message);
                     _setTimeout(
                         message,
                         () => {
                             location.reload();
                         },
-                        MONTH_MONITOR_MILISECONDS
+                        LONG_WAIT_MILISECONDS
                     );
                 } else {
-                    const message = `clickNextMonth after ${MONTH_MONITOR_MILISECONDS}`;
+                    const message = `clickNextMonth after ${CLICK_NEXT_MONTH_WAIT_MILISECONDS}`;
                     d.log(message);
                     _setTimeout(
                         message,
                         () => {
                             clickNextMonth();
-                            const message = `monitorMonths after ${MONTH_MONITOR_MILISECONDS}`;
+                            const message = `monitorMonths after ${DEFAULT_WAIT_MILISECONDS}`;
                             d.log(message);
                             _setTimeout(
                                 message,
                                 () => {
                                     monitorMonths();
                                 }, 
-                                MONTH_MONITOR_MILISECONDS
+                                DEFAULT_WAIT_MILISECONDS
                             );
                         },
-                        MONTH_MONITOR_MILISECONDS
+                        CLICK_NEXT_MONTH_WAIT_MILISECONDS
                     )
                 }
             } 
@@ -357,3 +363,7 @@
 // . added scroll to anchor
 // version 1.2
 // . reload if no right arrow
+// version 1.21
+// . clickNextMonth shorter wait
+// version 1.22
+// . added LONG_WAIT for reload
