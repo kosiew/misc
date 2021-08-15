@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.24
+// @version      1.25
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -158,7 +158,7 @@
                 () => {
                     elapsedSeconds--;
                     timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
-                    if (elapsedSeconds == 0) {
+                    if (elapsedSeconds <= 0) {
                         clearInterval(loop);
                     }
                 },
@@ -390,12 +390,15 @@
             addToggleButton,
             monitorMonths,
             setLogMessage,
+            isMonitoring
         };
     })();
 
     d.log('loading ukVisa Plus');
     visa.addToggleButton();
-    visa.monitorMonths();
+    if (visa.isMonitoring()) {
+        visa.monitorMonths();
+    }
 
 })(jQuery); //invoke nameless function and pass it the jQuery object
 
@@ -414,3 +417,5 @@
 // . added elapsedSeconds
 // version 1.24
 // . start Monitoring - triggers reload
+// version 1.25
+// . stop countdown if elapsedSeconds < 0
