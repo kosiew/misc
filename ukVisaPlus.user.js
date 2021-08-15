@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.23
+// @version      1.24
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -210,7 +210,7 @@
             GM_setValue(KEY_MONITOR, newValue);
             setButtonLabel();
             if (isMonitoring()) {
-                monitorMonths();
+                location.reload();
             } else {
                 timer.stop();
             }
@@ -412,3 +412,5 @@
 // . added LONG_WAIT for reload
 // version 1.23
 // . added elapsedSeconds
+// version 1.24
+// . start Monitoring - triggers reload
