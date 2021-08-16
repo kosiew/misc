@@ -382,9 +382,9 @@
                 timer.setTimeOut(
                     'load appointments',
                     () => {
-                        location.href(URL_APPOINTMENTS);
+                        location.href = URL_APPOINTMENTS;
                     },
-                    LONG_WAIT_MILISECONDS
+                    DEFAULT_WAIT_MILISECONDS
                 )
             } 
         }
@@ -402,11 +402,11 @@
                 monitorMonth(month);
 
                 if (month == endMonth) {
-                    const action = `load Centers`;
+                    const action = `load ${URL_CENTERS}`;
                     timer.setTimeOut(
                         action,
                         () => {
-                            location.href(URL_CENTERS);
+                            location.href = URL_CENTERS;
                         },
                         LONG_WAIT_MILISECONDS
                     );
