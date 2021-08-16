@@ -368,13 +368,8 @@
                 scrollToAnchor('monitor-centers');
                 const ctr = $('#VisaApplicationCenterddl');
                 ctr.val('MAK');
-                setTimeout(
-                    () => {
-                        const svt = $('#SelectYourVisaType');
-                        svt.val('PV');
-                    },
-                    5000
-                );
+                const svt = $('#SelectYourVisaType');
+                svt.val('PV');
                 const elem = getNoOfCentersElement();
                 const numberOfCenters = parseInt(elem.text());
                 const newCenters = 3 - numberOfCenters;
