@@ -365,6 +365,7 @@
             d.log('monitorCenters');
             
             if (isMonitoringCenters()) {
+                scrollToAnchor('monitor-centers');
                 const elem = getNoOfCentersElement();
                 const numberOfCenters = parseInt(elem.text());
                 const newCenters = 3 - numberOfCenters;
