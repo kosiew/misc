@@ -168,7 +168,7 @@
             timerLoop =  setInterval(
                 () => {
                     elapsedSeconds--;
-                    timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
+                    timerElement.text(`Countdown to ${action} (${timerSeconds} seconds): ${elapsedSeconds}`);
                     if (elapsedSeconds < -5) {
                         location.reload();
                     } else if (elapsedSeconds <= 0) {
@@ -206,7 +206,7 @@
         const VALUE_MONITOR_MONTH_FALSE = 'MONITOR_NO';
         const SHORT_WAIT_MILISECONDS = 10000;
         const DEFAULT_WAIT_MILISECONDS =  30000;
-        const LONG_WAIT_MILISECONDS = 5*DEFAULT_WAIT_MILISECONDS;
+        const LONG_WAIT_MILISECONDS = 3*DEFAULT_WAIT_MILISECONDS;
         const CLICK_NEXT_MONTH_WAIT_MILISECONDS = DEFAULT_WAIT_MILISECONDS;
         const NOTIFICATION_TIMEOUT_MILISECONDS = 3000;
         const SCROLL_OFFSET = 20;
@@ -402,7 +402,7 @@
                 monitorMonth(month);
 
                 if (month == endMonth) {
-                    const action = `load ${URL_CENTERS}`;
+                    const action = `load Centers`;
                     timer.setTimeOut(
                         action,
                         () => {
