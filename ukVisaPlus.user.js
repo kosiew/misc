@@ -366,6 +366,8 @@
             
             if (isMonitoringCenters()) {
                 scrollToAnchor('monitor-centers');
+                const ctr = $('#VisaApplicationCenterddl');
+                ctr.val('MAK');
                 const svt = $('#SelectYourVisaType')
                 svt.val('PV');
                 const elem = getNoOfCentersElement();
