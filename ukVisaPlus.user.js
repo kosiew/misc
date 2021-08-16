@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.32
+// @version      1.33
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -194,6 +194,8 @@
     })();
 
     const visa = (function () {
+        const URL_CENTERS = 'https://visa.vfsglobal.com/mys/en/gbr/ukvihandshake';
+        const URL_APPOINTMENTS = 'https://visa.vfsglobal.com/mys/en/gbr/book-appointment';
         const KEY_MONITOR_CENTER = 'MONITOR_CENTERS';
         const VALUE_MONITOR_CENTER_TRUE = 'MONITOR_YES';
         const VALUE_MONITOR_CENTER_FALSE = 'MONITOR_NO';
@@ -378,9 +380,9 @@
                     );
                 }         
                 timer.setTimeOut(
-                    'reload',
+                    'load appointments',
                     () => {
-                        location.reload();
+                        location.href(URL_APPOINTMENTS);
                     },
                     LONG_WAIT_MILISECONDS
                 )
@@ -400,11 +402,11 @@
                 monitorMonth(month);
 
                 if (month == endMonth) {
-                    const action = `reloading`;
+                    const action = `load Centers`;
                     timer.setTimeOut(
                         action,
                         () => {
-                            location.reload();
+                            location.href(URL_CENTERS);
                         },
                         LONG_WAIT_MILISECONDS
                     );
