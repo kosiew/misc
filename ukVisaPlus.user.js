@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.35
+// @version      1.36
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -23,7 +23,7 @@
     $.fn.multiline = function(text){
         this.text(text);
         this.html(this.html().replace(/\n/g,'<br/>'));
-        return this;
+        return this;/moni/
     }
 
 // ---- generic template code start ---    
@@ -368,8 +368,13 @@
                 scrollToAnchor('monitor-centers');
                 const ctr = $('#VisaApplicationCenterddl');
                 ctr.val('MAK');
-                const svt = $('#SelectYourVisaType')
-                svt.val('PV');
+                setTimeout(
+                    () => {
+                        const svt = $('#SelectYourVisaType');
+                        svt.val('PV');
+                    },
+                    5000
+                );
                 const elem = getNoOfCentersElement();
                 const numberOfCenters = parseInt(elem.text());
                 const newCenters = 3 - numberOfCenters;
