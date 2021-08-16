@@ -269,7 +269,7 @@
                     const unavailableDays = unavailableDayElements.length;
                     const availableDays = daysInMonth - unavailableDays;
                     d.log(`${month} - ${daysInMonth} daysInMonth - ${unavailableDays} unavailable days`);
-                    const message = `${month} - there are ${availableDays} days with available appointments`;
+                    const message = `${availableDays} days in ${month} with available appointments`;
                     d.log(message);
 
                     const notify = (NOTIFY_ONLY_IF_AVAILABLE && availableDays > 0) || !NOTIFY_ONLY_IF_AVAILABLE;
