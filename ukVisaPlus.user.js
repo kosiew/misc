@@ -2,10 +2,11 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.28
+// @version      1.30
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
+// @match        https://visa.vfsglobal.com/mys/en/gbr/ukvihandshake
 // @require      http://code.jquery.com/jquery-3.4.1.min.js
 // @require      http://code.jquery.com/ui/1.12.1/jquery-ui.js
 // @grant        GM_getResourceText
@@ -144,7 +145,8 @@
 // ---- generic template code end ---    
 
     const timer = (function () {
-        let loop;
+        let timerLoop;
+        let timeoutLoop;
 
         let timerElement;
 
@@ -152,16 +154,25 @@
             timerElement = element;
         }
 
+        function setTimeOut(action, f, timeout) {
+            start(action, timeout/1000);
+            timeoutLoop = setTimeout(
+                () => {
+                    f();
+                }
+                , timeout);
+        }
+
         function start(action, timerSeconds) {
             let elapsedSeconds = timerSeconds;
-            loop =  setInterval(
+            timerLoop =  setInterval(
                 () => {
                     elapsedSeconds--;
                     timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
                     if (elapsedSeconds < -5) {
                         location.reload();
                     } else if (elapsedSeconds <= 0) {
-                        clearInterval(loop);
+                        clearInterval(timerLoop);
                     }
                 },
                 1000
@@ -169,7 +180,8 @@
         }
 
         function stop() {
-            clearInterval(loop);
+            clearInterval(timerLoop);
+            clearTimeout(timeoutLoop);
             timerElement.text('Status: Stopped monitoring')
         }
         
@@ -177,16 +189,19 @@
             start,
             stop,
             register,
+            setTimeOut
         };
     })();
 
     const visa = (function () {
-        const KEY_MONITOR = 'MONITOR';
+        const KEY_MONITOR_CENTER = 'MONITOR_CENTERS';
+        const VALUE_MONITOR_CENTER_TRUE = 'MONITOR_YES';
+        const VALUE_MONITOR_CENTER_FALSE = 'MONITOR_NO';
+        const KEY_MONITOR_MONTH = 'MONITOR_MONTHS';
         const KEY_END_MONTH = 'END_MONTH';
         const DEFAULT_END_MONTH = 'November 2021';
-        const VALUE_MONITOR_TRUE = 'MONITOR_YES';
-        const VALUE_MONITOR_FALSE = 'MONITOR_NO';
-        const INTERVAL_MINUTES = 10;
+        const VALUE_MONITOR_MONTH_TRUE = 'MONITOR_YES';
+        const VALUE_MONITOR_MONTH_FALSE = 'MONITOR_NO';
         const SHORT_WAIT_MILISECONDS = 10000;
         const DEFAULT_WAIT_MILISECONDS =  30000;
         const LONG_WAIT_MILISECONDS = 5*DEFAULT_WAIT_MILISECONDS;
@@ -194,9 +209,12 @@
         const NOTIFICATION_TIMEOUT_MILISECONDS = 3000;
         const SCROLL_OFFSET = 20;
         const NOTIFY_ONLY_IF_AVAILABLE = true;
-        const labelMonitor = 'Monitor months';
-        const labelStopMonitor = 'Stop monitor months';
-        const toggleButton = $(`<button id="monitor-months">${labelMonitor}</button>`);
+        const labelMonitorMonths = 'Monitor months';
+        const labelStopMonitorMonths = 'Stop monitor months';
+        const labelMonitorCenters = 'Monitor centers';
+        const labelStopMonitorCenters = 'Stop monitor centers';
+        const toggleMonitorMonthsButton = $(`<button id="monitor-months">${labelMonitorMonths}</button>`);
+        const toggleMonitorCentersButton = $(`<button id="monitor-centers">${labelMonitorCenters}</button>`);
         const inputEndMonth = $(`<input type="text" size="20" value="${DEFAULT_END_MONTH}" id="end-month" name="end_month" />`);
         const nextActionElement = $('<h4></h4>');
         const logMessageElement = $('<h5></h5>');
@@ -206,12 +224,25 @@
 
         timer.register(timerElement);
 
-        toggleButton.click( () => {
-            const value = getMonitorValue();
-            const newValue = value == VALUE_MONITOR_TRUE ? VALUE_MONITOR_FALSE : VALUE_MONITOR_TRUE;
-            GM_setValue(KEY_MONITOR, newValue);
-            setButtonLabel();
-            if (isMonitoring()) {
+        toggleMonitorCentersButton.click( (e) => {
+            e.preventDefault();
+            const value = getMonitorCenterValue();
+            const newValue = value == VALUE_MONITOR_CENTER_TRUE ? VALUE_MONITOR_CENTER_FALSE : VALUE_MONITOR_CENTER_TRUE;
+            GM_setValue(KEY_MONITOR_CENTER, newValue);
+            setMonitorCentersButtonLabel();
+            if (isMonitoringCenters()) {
+                location.reload();
+            } else {
+                timer.stop();
+            }
+        });
+        
+        toggleMonitorMonthsButton.click( () => {
+            const value = getMonitorMonthValue();
+            const newValue = value == VALUE_MONITOR_MONTH_TRUE ? VALUE_MONITOR_MONTH_FALSE : VALUE_MONITOR_MONTH_TRUE;
+            GM_setValue(KEY_MONITOR_MONTH, newValue);
+            setMonitorMonthsButtonLabel();
+            if (isMonitoringMonths()) {
                 location.reload();
             } else {
                 timer.stop();
@@ -228,11 +259,9 @@
 
         function _setTimeout(action, f, timeout) {
             const _message = `${action} after ${timeout/1000} seconds`;
-            nextActionElement.text(action);
             timer.start(action, timeout/1000);
             timerLoop = setTimeout(
                 () => {
-                    nextActionElement.text('');
                     f();
                 }
                 , timeout);
@@ -255,7 +284,7 @@
         }
 
         function monitorMonth(month) {
-            if (isMonitoring()) {
+            if (isMonitoringMonths()) {
                 d.log(`monitorMonth ${month}`);
 
                 if (isLoading()) {
@@ -292,7 +321,7 @@
         }
 
         function clickNextMonth() {
-            if (isMonitoring()) {
+            if (isMonitoringMonths()) {
                 const rightArrow = $('.arrow-right-icon');
                 if (rightArrow.length > 0) {
                     rightArrow.click();
@@ -303,15 +332,55 @@
             scrollToAnchor('monitor-months');
         }
 
-        function isMonitoring() {
-            const value = getMonitorValue();
-            return value == VALUE_MONITOR_TRUE;
+        function isMonitoringMonths() {
+            const value = getMonitorMonthValue();
+            return value == VALUE_MONITOR_MONTH_TRUE;
         }
         
+        function isMonitoringCenters() {
+            const value = getMonitorCenterValue();
+            return value == VALUE_MONITOR_CENTER_TRUE;
+        }
+
+
+        function getNoOfCentersElement() {
+            const elem = $('#noOfCenter');
+            return elem;
+        }
+
+        function monitorCenters() {
+            d.log('monitorCenters');
+            
+            if (isMonitoringCenters()) {
+                const elem = getNoOfCentersElement();
+                const numberOfCenters = parseInt(elem.text());
+                const newCenters = 3 - numberOfCenters;
+                const message = `There are ${newCenters} new centers`;
+                d.log(message);
+                if (newCenters > 0) {
+                    GM_notification ( {
+                        title: 'Number of Center', 
+                        text: message, 
+                        image: 'https://i.stack.imgur.com/geLPT.png',
+                        timeout: options.NOTIFICATION_TIMEOUT_MILISECONDS,
+                        }
+                    );
+                }         
+                timer.setTimeOut(
+                    'reload',
+                    () => {
+                        location.reload();
+                    },
+                    LONG_WAIT_MILISECONDS
+                )
+            } 
+        }
+
+
         function monitorMonths() {
             d.log('monitorMonths');
             
-            if (isMonitoring()) {
+            if (isMonitoringMonths()) {
                     
                 const endMonth = getEndMonth();
                 const monthElement = $('table > tr.calendar-month-header > th:nth-child(2) > span');
@@ -321,7 +390,7 @@
 
                 if (month == endMonth) {
                     const action = `reloading`;
-                    _setTimeout(
+                    timer.setTimeOut(
                         action,
                         () => {
                             location.reload();
@@ -330,12 +399,12 @@
                     );
                 } else {
                     const action = `clickNextMonth`;
-                    _setTimeout(
+                    timer.setTimeOut(
                         action,
                         () => {
                             clickNextMonth();
                             const action = `monitorMonths`;
-                            _setTimeout(
+                            timer.setTimeOut(
                                 action,
                                 () => {
                                     monitorMonths();
@@ -349,15 +418,26 @@
             } 
         }
 
-        function getMonitorValue() {
-            return _gm_getValue(KEY_MONITOR, VALUE_MONITOR_FALSE);
+        function getMonitorMonthValue() {
+            return _gm_getValue(KEY_MONITOR_MONTH, VALUE_MONITOR_MONTH_FALSE);
         }
 
-        function setButtonLabel() {
-            if (isMonitoring()) {
-                toggleButton.text(labelStopMonitor);
+        function getMonitorCenterValue() {
+            return _gm_getValue(KEY_MONITOR_CENTER, VALUE_MONITOR_CENTER_FALSE);
+        }
+
+        function setMonitorMonthsButtonLabel() {
+            if (isMonitoringMonths()) {
+                toggleMonitorMonthsButton.text(labelStopMonitorMonths);
             } else {
-                toggleButton.text(labelMonitor);
+                toggleMonitorMonthsButton.text(labelMonitorMonths);
+            }
+        }
+        function setMonitorCentersButtonLabel() {
+            if (isMonitoringCenters()) {
+                toggleMonitorCentersButton.text(labelStopMonitorCenters);
+            } else {
+                toggleMonitorCentersButton.text(labelMonitorCenters);
             }
         }
 
@@ -377,29 +457,54 @@
             logMessageElement.multiline(messages);
         }
     
-        function addToggleButton() {
+        function addToggleMonitorMonthsButton() {
             const h2 = $('.vas-container h2');
-            h2.after(toggleButton);
-            toggleButton.after(inputEndMonth);
+            h2.after(toggleMonitorMonthsButton);
+            toggleMonitorMonthsButton.after(inputEndMonth);
             inputEndMonth.after(nextActionElement);
             nextActionElement.after(logMessageElement);
             logMessageElement.after(timerElement);
-            setButtonLabel();
+            setMonitorMonthsButtonLabel();
             setEndMonth();
+
+            const monitorCentersPage = $('<a href="https://visa.vfsglobal.com/mys/en/gbr/ukvihandshake" target="_blank">Click to open Monitor Centers page</a>');
+            timerElement.after(monitorCentersPage);
         }
-    
+
+        function addToggleMonitorCentersButton() {
+            const malaysiaP = $('p:contains(Malaysia)');
+            malaysiaP.after(toggleMonitorCentersButton);
+            toggleMonitorCentersButton.after(logMessageElement);
+            logMessageElement.after(timerElement);
+
+            setMonitorCentersButtonLabel();
+        }
+        
         return {
-            addToggleButton,
+            addToggleMonitorCentersButton,
+            addToggleMonitorMonthsButton,
             monitorMonths,
             setLogMessage,
-            isMonitoring
+            isMonitoringMonths,
+            isMonitoringCenters,
+            monitorCenters,
         };
     })();
 
-    d.log('loading ukVisa Plus');
-    visa.addToggleButton();
-    if (visa.isMonitoring()) {
-        visa.monitorMonths();
+
+    const href = location.href;
+    d.log(`loading ukVisa Plus - ${href}`);
+
+    if (href == 'https://visa.vfsglobal.com/mys/en/gbr/ukvihandshake') {
+        visa.addToggleMonitorCentersButton();
+        if (visa.isMonitoringCenters()) {
+            visa.monitorCenters();
+        }
+    } else {
+        visa.addToggleMonitorMonthsButton();
+        if (visa.isMonitoringMonths()) {
+            visa.monitorMonths();
+        }
     }
 
 })(jQuery); //invoke nameless function and pass it the jQuery object
@@ -412,6 +517,8 @@
 // version 1.2
 // . reload if no right arrow
 // version 1.21
+                    const message = `There are ${newCenters} new centers`;
+                    d.log(message);
 // . clickNextMonth shorter wait
 // version 1.22
 // . added LONG_WAIT for reload
