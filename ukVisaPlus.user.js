@@ -366,6 +366,8 @@
             
             if (isMonitoringCenters()) {
                 scrollToAnchor('monitor-centers');
+                const svt = $('#SelectYourVisaType')
+                svt.val('PV');
                 const elem = getNoOfCentersElement();
                 const numberOfCenters = parseInt(elem.text());
                 const newCenters = 3 - numberOfCenters;
@@ -381,9 +383,10 @@
                     );
                 }         
                 timer.setTimeOut(
-                    'load appointments',
+                    'click Continue',
                     () => {
-                        location.href = URL_APPOINTMENTS;
+                        const button = $('input#btnMainHandshakeContinue');
+                        button.click();
                     },
                     DEFAULT_WAIT_MILISECONDS
                 )
