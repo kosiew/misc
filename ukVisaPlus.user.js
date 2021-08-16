@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.30
+// @version      1.31
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -215,6 +215,7 @@
         const labelStopMonitorCenters = 'Stop monitor centers';
         const toggleMonitorMonthsButton = $(`<button id="monitor-months">${labelMonitorMonths}</button>`);
         const toggleMonitorCentersButton = $(`<button id="monitor-centers">${labelMonitorCenters}</button>`);
+        const testAvailableDaysButton = $(`<button id="test-available-days">Test available days</button>`);
         const inputEndMonth = $(`<input type="text" size="20" value="${DEFAULT_END_MONTH}" id="end-month" name="end_month" />`);
         const nextActionElement = $('<h4></h4>');
         const logMessageElement = $('<h5></h5>');
@@ -223,6 +224,13 @@
         const MAX_LOG_MESSAGES = 5;
 
         timer.register(timerElement);
+
+        testAvailableDaysButton.click(
+            () => {
+                const days = $('td .day');
+                days.removeClass('unavailable_service');
+            }
+        );
 
         toggleMonitorCentersButton.click( (e) => {
             e.preventDefault();
@@ -460,6 +468,7 @@
         function addToggleMonitorMonthsButton() {
             const h2 = $('.vas-container h2');
             h2.after(toggleMonitorMonthsButton);
+            h2.after(testAvailableDaysButton);
             toggleMonitorMonthsButton.after(inputEndMonth);
             inputEndMonth.after(nextActionElement);
             nextActionElement.after(logMessageElement);
@@ -517,8 +526,6 @@
 // version 1.2
 // . reload if no right arrow
 // version 1.21
-                    const message = `There are ${newCenters} new centers`;
-                    d.log(message);
 // . clickNextMonth shorter wait
 // version 1.22
 // . added LONG_WAIT for reload
