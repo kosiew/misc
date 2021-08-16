@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.34
+// @version      1.35
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
