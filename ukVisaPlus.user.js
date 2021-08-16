@@ -2,7 +2,7 @@
 // @name         UK Visa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.31
+// @version      1.32
 // @description  Tool for enhancing UK Visa
 // @author       Siew "@xizun"
 // @match        https://visa.vfsglobal.com/mys/en/gbr/book-appointment*
@@ -237,6 +237,7 @@
             const value = getMonitorCenterValue();
             const newValue = value == VALUE_MONITOR_CENTER_TRUE ? VALUE_MONITOR_CENTER_FALSE : VALUE_MONITOR_CENTER_TRUE;
             GM_setValue(KEY_MONITOR_CENTER, newValue);
+            
             setMonitorCentersButtonLabel();
             if (isMonitoringCenters()) {
                 location.reload();
@@ -250,6 +251,7 @@
             const newValue = value == VALUE_MONITOR_MONTH_TRUE ? VALUE_MONITOR_MONTH_FALSE : VALUE_MONITOR_MONTH_TRUE;
             GM_setValue(KEY_MONITOR_MONTH, newValue);
             setMonitorMonthsButtonLabel();
+            getEndMonth();
             if (isMonitoringMonths()) {
                 location.reload();
             } else {
@@ -280,6 +282,7 @@
             GM_setValue(KEY_END_MONTH, endMonth);
             return endMonth;
         }
+
         function scrollToAnchor(aid){
             let aTag = $("#"+ aid);
             let top = aTag.offset().top - SCROLL_OFFSET;
