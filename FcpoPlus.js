@@ -29,8 +29,8 @@
     const KEY = 'FCPO';
 
     const _today = truncateDate(new Date()); // new Date(new Date().getFullYear(),new Date().getMonth() , new Date().getDate());
-    const logMessagesElement = $('<h5></h5>');
-    const timerElement = $('<h5></h5>');
+    const logMessagesElement = $('<h5 id="log-messages">log messages</h5>');
+    const timerElement = $('<h5 id="timer">timer</h5>');
 
     const TR_INDICES = {
         2: 'MONTH',
@@ -122,10 +122,10 @@
       let timerLoop;
       let timeoutLoop;
 
-      let timerElement;
+      let _timerElement;
 
       function register(element) {
-          timerElement = element;
+          _timerElement = element;
       }
 
       function setTimeOut(action, f, timeout) {
@@ -142,7 +142,7 @@
           timerLoop =  setInterval(
               () => {
                   elapsedSeconds--;
-                  timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
+                  _timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
                   if (elapsedSeconds < -5) {
                       location.reload();
                   } else if (elapsedSeconds <= 0) {
@@ -156,7 +156,7 @@
       function stop() {
           clearInterval(timerLoop);
           clearTimeout(timeoutLoop);
-          timerElement.text('Status: Stopped monitoring')
+          _timerElement.text('Status: Stopped monitoring')
       }
       
       return {
@@ -816,7 +816,8 @@ const query = function () {
 
     function addDataButtons() {
         const searchButton = $('.btn-primary');
-        const copyDataButton = $('<button>Copy history data</button>');
+        const inputCenter = $('.input-center');
+        const copyDataButton = $('<button id="copy-history-data">Copy history data</button>');
         copyDataButton.click(() => {
             const data = {'FCPO': {...fcpo.db}};
             const dataJson = JSON.stringify(data);
@@ -826,9 +827,9 @@ const query = function () {
             copyItemsToClipboard(items);
             
         });
-        searchButton.after(copyDataButton);
-        copyDataButton.after(logMessagesElement);
-        logMessagesElement.after(timerElement);
+        inputCenter.after(copyDataButton);
+        inputCenter.after(timerElement);
+        inputCenter.after(logMessagesElement);
         timer.register(timerElement);
     }
 
