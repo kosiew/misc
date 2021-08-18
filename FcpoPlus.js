@@ -142,11 +142,12 @@
       }
 
       function start(action, timerSeconds) {
-          let elapsedSeconds = timerSeconds;
+          let elapsedSeconds = parseInt(timerSeconds);
           timerLoop =  setInterval(
               () => {
                   elapsedSeconds--;
-                  _timerElement.text(`Countdown to ${action} (seconds): ${elapsedSeconds}`);
+                  const timeCountdown = new Date(elapsedSeconds * 1000).toISOString().substr(11, 8);
+                  _timerElement.text(`Countdown to ${action} : ${timeCountdown}`);
                   if (elapsedSeconds < -5) {
                       location.reload();
                   } else if (elapsedSeconds <= 0) {
