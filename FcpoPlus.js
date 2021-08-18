@@ -24,7 +24,11 @@
         MAX_DAYS_DATA = 31; 
         WAIT_MILISECONDS = 600000,
         CHANGE_THRESHOLD = 40,
-        NOTIFICATION_TITLE = 'FCPO Alert';
+        NOTIFICATION_TITLE = 'FCPO Alert',
+        MORNING_START = 10.75,
+        MORNING_END = 12.75,
+        NOON_START = 14.75,
+        NOON_END = 18.26;
 
     const KEY = 'FCPO';
 
@@ -719,7 +723,7 @@ const query = function () {
         d.log(`change = ${change}`);
         if (abs_change > CHANGE_THRESHOLD) {
             const decimalHours = getDecimalHours();
-            if ((decimalHours > 10.75 && decimalHours < 12.75) || (decimalHours > 14.75 && decimalHours < 18.26)) {
+            if ((decimalHours > MORNING_START && decimalHours < MORNING_END) || (decimalHours > NOON_START && decimalHours < NOON_END)) {
                 const message = 'FCPO change is '.concat(change);
                 notify(message);
             }
@@ -847,12 +851,19 @@ const query = function () {
         const reload = (decimalHours < 18.26);
         d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
         if (reload) {
+            let waitHours;
+            if (decimalHours < MORNING_START) {
+              waitHours = MORNING_START - decimalHours;
+            } else if (decimalHours < NOON_START) {
+              waitHours = NOON_START - decimalHours;
+            }
+            const waitMiliseconds = waitHours * 60 * 60 * 1000;
             timer.setTimeOut(
-                'reload',
+                'reload' ,
                 () => {
                     location.reload();
                 },
-                WAIT_MILISECONDS
+                waitMiliseconds
             );
         }
         // do something on document ready

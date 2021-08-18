@@ -372,7 +372,7 @@
                 svt.val('PV');
                 const elem = getNoOfCentersElement();
                 const numberOfCenters = parseInt(elem.text());
-                const newCenters = 3 - numberOfCenters;
+                const newCenters = numberOfCenters - 3;
                 const message = `There are ${newCenters} new centers`;
                 d.log(message);
                 if (newCenters > 0) {
