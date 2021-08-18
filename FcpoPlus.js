@@ -853,11 +853,13 @@ const query = function () {
         d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
         if (reload) {
             let waitHours;
-            if (decimalHours < MORNING_START) {
+            if ((decimalHours > MORNING_START && decimalHours < MORNING_END) || (decimalHours > NOON_START && decimalHours < NOON_END)) {
+              waitHours = 0.25;
+            } else if (decimalHours <= MORNING_START) {
               waitHours = MORNING_START - decimalHours;
-            } else if (decimalHours < NOON_START) {
-              waitHours = NOON_START - decimalHours;
-            }
+            } else if (decimalHours >= MORNING_END) {
+              waitHours = NOON_START - decimalHours; 
+            } 
             const waitMiliseconds = waitHours * 60 * 60 * 1000;
             timer.setTimeOut(
                 'reload' ,
