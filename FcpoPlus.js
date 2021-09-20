@@ -616,15 +616,17 @@ const query = function () {
                     lows.push(columns.LOW);
                     highs.push(columns.HIGH);
                 }
-                const _min = Math.min(...lows);
-                const _max = Math.max(...highs);
+                const _lows = filterNull(lows);
+                const _highs = filterNull(highs);
+                const _min = Math.min(..._lows);
+                const _max = Math.max(..._highs);
                 // if (_min != min) {
                 //     alert(`_min ${_min} != min ${min}`);
                 // }
                 // if (_max != max) {
                 //     alert(`_max ${_max} != max ${max}`);
                 // }
-                const minMaxD = {'MAX': max, 'MIN': min};
+                const minMaxD = {'MAX': _max, 'MIN': _min};
                 const monthD = monthsDaysView[month] || {};
                 monthsDaysView[month] = Object.assign(monthD, minMaxD);
 
@@ -635,7 +637,10 @@ const query = function () {
             return monthsDaysView;
         }
 
-
+        function filterNull(arr) {
+            const result = arr.filter(Number);
+            return result;
+        }
 
         function getMaxRange(view) {
             const months = Object.keys(view);
