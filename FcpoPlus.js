@@ -17,8 +17,7 @@
 
 ;(function($){ //function to create private scope with $ parameter
     // FcpoPlus.js
-    const TR_MONTH_INDEX = 2,
-        MONTH_INDEX = 6,
+    const MONTH_INDEX = 6,
         MAX_MONTH_INDEX = 9,
         MAX_DAY_DIFFERENCE = 14;
         MAX_DAYS_DATA = 31; 
@@ -36,7 +35,9 @@
     const logMessagesElement = $('<h5 id="log-messages">log messages</h5>');
     const timerElement = $('<h5 id="timer">timer</h5>');
 
+    
     const TR_INDICES = {
+        1: 'NAME',
         2: 'MONTH',
         6: 'LAST_DONE',
         12: 'SETTLEMENT',
@@ -44,6 +45,13 @@
         9: 'LOW',
         10: 'VOLUME',
     }
+
+    function getKeyByValue(object, value) {
+      return Object.keys(object).find(key => object[key] === value);
+    }
+
+    const TR_MONTH_INDEX = getKeyByValue(TR_INDICES, 'MONTH');
+    const TR_NAME_INDEX = getKeyByValue(TR_INDICES, 'NAME');
 
     const options = {
         DEBUG: true,
@@ -480,7 +488,7 @@ const query = function () {
 
         // get months D(ictionary) from bursa page
         function getMonthsD() {
-            const trs = $('tbody tr');
+            const trs = $('tbody tr:not(:contains("T+1")');
             let monthsD = {};
             d.group('getMonthsD');
             for (let index = 0; index <= MAX_MONTH_INDEX; index++) {
