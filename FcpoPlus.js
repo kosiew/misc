@@ -141,6 +141,8 @@
       }
 
       function setTimeOut(action, f, timeout) {
+          d.log('setTimeOut+');
+          d.log(`timeout = ${timeout}`);
           start(action, timeout/1000);
           timeoutLoop = setTimeout(
               () => {
@@ -150,11 +152,15 @@
       }
 
       function start(action, timerSeconds) {
+          d.group('start')
+          d.log(`timerSeconds = ${timerSeconds}`);
           let elapsedSeconds = parseInt(timerSeconds);
           timerLoop =  setInterval(
               () => {
                   elapsedSeconds--;
-                  const timeCountdown = new Date(elapsedSeconds * 1000).toISOString().substr(11, 8);
+                  const elapsedMiliSeconds = elapsedSeconds * 1000;
+                  const newDate = new Date(elapsedMiliSeconds);
+                  const timeCountdown = newDate.toISOString().substr(11, 8);
                   _timerElement.text(`Countdown to ${action} : ${timeCountdown}`);
                   if (elapsedSeconds < -5) {
                       location.reload();
@@ -164,6 +170,7 @@
               },
               1000
           );
+          d.groupEnd();
       }
 
       function stop() {
@@ -756,7 +763,6 @@ const query = function () {
 
     function highlightRow() {
         const maxRangeMonth = Object.keys(fcpo.maxRangeD)[0];
-        // const row = $(`table tr:nth-child(${MONTH_INDEX + 1})`);
         const row = $(`table tr:contains(${maxRangeMonth})`);
         row.css('border', '2px solid red');
     }
@@ -853,15 +859,16 @@ const query = function () {
         addDataButtons();
 
         const decimalHours = getDecimalHours();
-        const reload = (decimalHours < 18.26);
+        const reload = (decimalHours < NOON_END);
         d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
         if (reload) {
-            let waitHours;
+            let waitHours = .25;
             if (decimalHours < MORNING_START) {
               waitHours = MORNING_START - decimalHours;
             } else if (decimalHours < NOON_START) {
               waitHours = NOON_START - decimalHours;
             }
+            d.log(`waitHours = ${waitHours}`);
             const waitMiliseconds = waitHours * 60 * 60 * 1000;
             timer.setTimeOut(
                 'reload' ,
