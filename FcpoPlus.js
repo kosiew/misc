@@ -2,7 +2,7 @@
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.42
+// @version      1.43
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -478,7 +478,7 @@ const query = function () {
 
     const fcpo = (function () {
 
-        // get months D from bursa page
+        // get months D(ictionary) from bursa page
         function getMonthsD() {
             const trs = $('tbody tr');
             let monthsD = {};
@@ -567,10 +567,12 @@ const query = function () {
         function addToolTip(mdv) {
             d.group('addToolTip');
             for (const [month, columns] of Object.entries(mdv)) {
-                d.table(columns);
                 d.log(`month: ${month}`);
+                d.table(columns);
                 const tr = $(`tbody tr:contains(${month})`);
-                if (tr.length > 0) {
+                const columns0 = columns[0];
+
+                if (tr.length > 0 && columns0 != undefined) {
                     const max = columns.MAX;
                     const min = columns.MIN;
                     const range = columns[0].RANGE;
@@ -618,12 +620,6 @@ const query = function () {
                 }
                 const _min = Math.min(...lows);
                 const _max = Math.max(...highs);
-                // if (_min != min) {
-                //     alert(`_min ${_min} != min ${min}`);
-                // }
-                // if (_max != max) {
-                //     alert(`_max ${_max} != max ${max}`);
-                // }
                 const minMaxD = {'MAX': max, 'MIN': min};
                 const monthD = monthsDaysView[month] || {};
                 monthsDaysView[month] = Object.assign(monthD, minMaxD);
