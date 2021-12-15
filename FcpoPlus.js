@@ -2,7 +2,7 @@
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.44
+// @version      1.45
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -762,7 +762,7 @@ const query = function () {
 
     function highlightRow() {
         const maxRangeMonth = Object.keys(fcpo.maxRangeD)[0];
-        const row = $(`table tr:contains(${maxRangeMonth})`);
+        const row = $(`table tr:contains(${maxRangeMonth}):not(:contains(T+1))`);
         row.css('border', '2px solid red');
     }
 
@@ -881,22 +881,3 @@ const query = function () {
     }); // end ready
 
 })(jQuery); //invoke nameless function and pass it the jQuery object
-
-
-// version 1.1
-// . save data
-// . gets min, max over last 7 days
-// . finds row with max range
-
-// version 1.2
-// . delete old data automatically
-
-// version 1.3
-// . added copyData button
-
-// version 1.4
-// . copyData - copy table too
-// . added query() for sql
-
-// version 1.41
-// . commented out alert _min, _max
