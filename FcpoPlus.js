@@ -2,7 +2,7 @@
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.43
+// @version      1.44
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -37,7 +37,6 @@
 
     
     const TR_INDICES = {
-        1: 'NAME',
         2: 'MONTH',
         6: 'LAST_DONE',
         12: 'SETTLEMENT',
@@ -495,7 +494,7 @@ const query = function () {
 
         // get months D(ictionary) from bursa page
         function getMonthsD() {
-            const trs = $('tbody tr:not(:contains("T+1")');
+            const trs = $('tbody tr:not(:contains("T+1"))');
             let monthsD = {};
             d.group('getMonthsD');
             for (let index = 0; index <= MAX_MONTH_INDEX; index++) {
