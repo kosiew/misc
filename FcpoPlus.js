@@ -1,8 +1,8 @@
-//ddtool/ ==UserScript==
+///ddtool/ ==UserScript==
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.42
+// @version      1.43
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -502,16 +502,55 @@ const query = function () {
                         month = columnValue;
                     }
                 }
-                monthD[month] = {...monthValues};
-                d.table(monthD);
-                d.groupEnd();
-                monthsD = Object.assign(monthsD, monthD);
+                if ((monthValues.VOLUME || 0) > 0) {
+                  monthD[month] = {...monthValues};
+                  d.table(monthD);
+                  d.groupEnd();
+                  monthsD = updateMonthsD(monthsD, monthD);  
+                }
+                
             }
             d.groupEnd();
             d.group('monthsD');
             d.table(monthsD);
             d.groupEnd();
             return monthsD;
+        }
+
+        /*
+        monthD looks like this
+            "Feb 2022": {
+                "LAST_DONE": 5920,
+                "HIGH": 5920,
+                "LOW": 5900,
+                "VOLUME": 50,
+                "SETTLEMENT": 5935,
+                "RANGE": 20,
+                "HIGH_CHANGE": -15,
+                "LOW_CHANGE": -35
+            },
+        monthsD looks like this
+            "Feb 2022": {....},
+            "Mar 2022": {....},
+            ....
+        
+        each month has 2 rows - a (T + 1) and a row without
+        This function checks whether there is already an entry for the monthD and then updates it for max High, min Low
+        */
+        function updateMonthsD(monthsD, monthD) {
+          for (let [month, priceInfo] of Object.entries(monthD)) {
+            const _priceInfo = monthsD[month];
+            if (_priceInfo != undefined) {
+              const newHigh = Math.max(priceInfo.HIGH, _priceInfo.HIGH);
+              const newLow = Math.min(priceInfo.LOW, _priceInfo.LOW);
+              const newRange = Math.max(priceInfo.RANGE, _priceInfo.RANGE);
+              const diff = {HIGH: newHigh, LOW: newLow, RANGE: newRange};
+              priceInfo = {...priceInfo, ...diff};
+              monthD[month] = {...priceInfo};
+            }
+            monthsD = {...monthsD, ...monthD}; 
+          }
+          return monthsD;
         }
 
         const monthsD = getMonthsD();
@@ -573,7 +612,7 @@ const query = function () {
                 if (tr.length > 0) {
                     const max = columns.MAX;
                     const min = columns.MIN;
-                    const range = columns[0].RANGE;
+                    const range = columns[0]?.RANGE;
                     tr.tooltip({
                         content: `Max: ${max}, Min: ${min}, Range: ${range}`
                     });
@@ -789,7 +828,7 @@ const query = function () {
 
 
     function saveFcpo() {
-        d.group('dates in Databse');
+        d.group('dates in Database');
         const datesInDb = fcpo.datesInDb();
         d.table(datesInDb);
         d.group('max range month');
@@ -843,7 +882,33 @@ const query = function () {
         timer.register(timerElement);
     }
 
-    
+    function reload() {
+      const decimalHours = getDecimalHours();
+      const reload = (decimalHours < 18.26);
+      d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
+      if (reload) {
+          let waitHours;
+          if ((decimalHours > MORNING_START && decimalHours < MORNING_END) || (decimalHours > NOON_START && decimalHours < NOON_END)) {
+            d.log('In trading session');
+            waitHours = 0.25;
+          } else if (decimalHours <= MORNING_START) {
+            d.log('before morning trade session');
+            waitHours = MORNING_START - decimalHours;
+          } else if (decimalHours >= MORNING_END) {
+            d.log('after morning trade session');
+            waitHours = NOON_START - decimalHours; 
+          } 
+          const waitMiliseconds = waitHours * 60 * 60 * 1000;
+          timer.setTimeOut(
+              'reload' ,
+              () => {
+                  location.reload();
+              },
+              waitMiliseconds
+          );
+      }
+
+    }    
 
     $(function() {
         askNotificationPermission();
@@ -853,27 +918,8 @@ const query = function () {
         addToolTipStyle();
         addDataButtons();
 
-        const decimalHours = getDecimalHours();
-        const reload = (decimalHours < 18.26);
-        d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
-        if (reload) {
-            let waitHours;
-            if ((decimalHours > MORNING_START && decimalHours < MORNING_END) || (decimalHours > NOON_START && decimalHours < NOON_END)) {
-              waitHours = 0.25;
-            } else if (decimalHours <= MORNING_START) {
-              waitHours = MORNING_START - decimalHours;
-            } else if (decimalHours >= MORNING_END) {
-              waitHours = NOON_START - decimalHours; 
-            } 
-            const waitMiliseconds = waitHours * 60 * 60 * 1000;
-            timer.setTimeOut(
-                'reload' ,
-                () => {
-                    location.reload();
-                },
-                waitMiliseconds
-            );
-        }
+        reload()
+
         // do something on document ready
     }); // end ready
 
@@ -897,3 +943,5 @@ const query = function () {
 
 // version 1.41
 // . commented out alert _min, _max
+// version 1.43
+// . added d.log to debug waitHours, made RANGE options in addToolTip
