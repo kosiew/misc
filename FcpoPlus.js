@@ -2,7 +2,7 @@
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.5
+// @version      1.62
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -476,7 +476,24 @@ const query = function () {
   return self;
 };
 
+function shuffleArray(array) {
+  // Shuffle array
+  const shuffled = array.sort(() => 0.5 - Math.random());
+  return shuffled;
+}
+
   const fcpo = (function () {
+      const WAIT_WEIGHTAGE = 8; // 8 means 8/10 
+      const MAX_DAILY_PERCENT_CHANGE = .1; // .1 = 10%
+      const WAITS = Array(WAIT_WEIGHTAGE).fill('WAIT');
+      const ACTIONS = shuffleArray(['BUY', 'SELL', ...WAITS]);
+
+      function getArrayRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)]; 
+      }
+      
+      // const ACTION = getArrayRandomItem(ACTIONS);
+      const ACTION = ACTIONS[0];
 
       // get months D from bursa page
       function getMonthsD() {
@@ -603,18 +620,41 @@ const query = function () {
           return rows;
       }
 
+      function getTrColumnValue(tr, label) {
+        d.group('getTrIndexValue');
+        const index = getTrTdIndexOf(label);
+        const tds = tr.find('td');
+        const td = tds[index];
+        const $td = $(td);
+        const columnValue = $td.text();
+        d.log(`==> [columnValue = ${columnValue}]`);
+        const value = Number(columnValue.replace(',', ''));
+        d.groupEnd()
+        return value;
+      }
+      
+      function getTrTdIndexOf(label) {
+        const object = TR_INDICES;
+        return Object.keys(object).find(key => object[key] === label); 
+      }
+
       function addToolTip(mdv) {
           d.group('addToolTip');
           for (const [month, columns] of Object.entries(mdv)) {
               d.table(columns);
               d.log(`month: ${month}`);
-              const tr = $(`tbody tr:contains(${month})`);
-              if (tr.length > 0) {
+              const trs = $(`tbody tr:contains(${month})`);
+              d.log(`==> [tr.length = ${trs.length}]`);
+              for (const tr of trs) {
+                  const $tr = $(tr);
                   const max = columns.MAX;
                   const min = columns.MIN;
                   const range = columns[0]?.RANGE;
-                  tr.tooltip({
-                      content: `Max: ${max}, Min: ${min}, Range: ${range}`
+                  const settlement = getTrColumnValue($tr, 'SETTLEMENT');
+                  const limitDown = ((1 - MAX_DAILY_PERCENT_CHANGE) * settlement).toFixed();
+                  const limitUp = ((1 + MAX_DAILY_PERCENT_CHANGE) * settlement).toFixed(); 
+                  $tr.tooltip({
+                      content: `Max: ${max}, Min: ${min}, Range: ${range} Action:${ACTION} Limits: ${limitUp} - ${limitDown}`
                   });
               }
           }
@@ -753,7 +793,9 @@ const query = function () {
           tableData: tableData,
           datesInDb: getDatesInDb,
           maxRangeD: maxRangeD,
-          monthDaysView: monthDaysView
+          monthDaysView: monthDaysView,
+          ACTION,
+          ACTIONS
       };
   })();
 
@@ -769,7 +811,7 @@ const query = function () {
       if (abs_change > CHANGE_THRESHOLD) {
           const decimalHours = getDecimalHours();
           if ((decimalHours > MORNING_START && decimalHours < MORNING_END) || (decimalHours > NOON_START && decimalHours < NOON_END)) {
-              const message = 'FCPO change is '.concat(change);
+              const message = `FCPO change is ${change} - ${fcpo.ACTION}`;
               notify(message);
           }
       }
@@ -886,6 +928,7 @@ const query = function () {
     const decimalHours = getDecimalHours();
     const reload = (decimalHours < 18.26);
     d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
+    d.log(`ACTIONS = ${fcpo.ACTIONS}`);
     if (reload) {
         let waitHours;
         if ((decimalHours > MORNING_START && decimalHours < MORNING_END) || (decimalHours > NOON_START && decimalHours < NOON_END)) {
@@ -910,6 +953,12 @@ const query = function () {
 
   }
 
+  function addAction() {
+    const b = $('#copy-history-data');
+    const h1 = $(`<h1>${fcpo.ACTION}</h1>`);
+    b.after(h1);
+  }
+
   $(function() {
       askNotificationPermission();
       saveFcpo();
@@ -917,6 +966,7 @@ const query = function () {
       monitorFcpo();
       addToolTipStyle();
       addDataButtons();
+      addAction();
 
       reload()
 
@@ -945,3 +995,11 @@ const query = function () {
 // . commented out alert _min, _max
 // version 1.43
 // . added d.log to debug waitHours, made RANGE options in addToolTip
+
+// version 1.6
+// . added addAction
+
+// version 1.61
+// . added action in notification
+// version 1.62
+// . added max limit up, down
