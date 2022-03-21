@@ -2,7 +2,7 @@
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.63
+// @version      1.64
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -652,10 +652,22 @@ function shuffleArray(array) {
                   const min = columns.MIN;
                   const range = columns[0]?.RANGE;
                   const settlement = getTrColumnValue($tr, 'SETTLEMENT');
+                  const low = getTrColumnValue($tr, 'LOW');
+                  const high = getTrColumnValue($tr, 'HIGH');
+                  let gapAdvice = '';
+                  if (low > settlement) {
+                    gapAdvice = 'GAP UP!!';
+                  }
+                  if (high < settlement) {
+                    gapAdvice = 'GAP DOWN!!';
+                  }
+                  gapAdvice = gapAdvice ? `${gapAdvice}<br>`:'';
                   const limitDown = ((1 - MAX_DAILY_PERCENT_CHANGE) * settlement + RISK_MARGIN).toFixed();
                   const limitUp = ((1 + MAX_DAILY_PERCENT_CHANGE) * settlement - RISK_MARGIN).toFixed(); 
                   $tr.tooltip({
-                      content: `Max: ${max}, Min: ${min}<br>
+                      content: `
+${gapAdvice}                      
+Max: ${max}, Min: ${min}<br>
 Range: ${range} Action:${ACTION}<br>
 Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
                   });
