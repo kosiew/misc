@@ -582,7 +582,8 @@ function shuffleArray(array) {
       d.group('today View - with max, min change');
       // view contains additional columns - RANGE (high - low), HIGH_CHANGE (high - settlement), LOW_CHANGE (low - settlement)
       const todayView = getMonthsView(monthsD);
-      const maxRangeD = getMaxRange(todayView);
+      const maxRangeD = getMax(todayView, 'RANGE');
+      const maxVolumeD = getMax(todayView, 'VOLUME');
       d.table(todayView);
       d.groupEnd();
       const db = _gm_getValue(KEY, {});
@@ -736,9 +737,9 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
           return result;
       }
 
-      function getMaxRange(view) {
+      function old_getMaxRange(view) {
           const months = Object.keys(view);
-          const interestedMonths = months.slice(2, 10);
+          const interestedMonths = months.slice(0, 10);
 
           let max = 0;
           let maxRangeMonth = false;
@@ -753,7 +754,47 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
           const maxD = {};
           maxD[maxRangeMonth] = max;
           return maxD;
+
       }
+
+      function getMax(view, column) {
+        const months = Object.keys(view);
+        const interestedMonths = months.slice(0, 10);
+
+        let max = 0;
+        let maxMonth = false;
+        for (const [month, value] of Object.entries(view)) {
+            if (interestedMonths.includes(month)) {
+                if (value[column] > max) {
+                    max = value[column];
+                    maxMonth = month;
+                }
+            }
+        }
+        const maxD = {};
+        maxD[maxMonth] = max;
+        return maxD;
+    }
+
+      function getMaxRange(view) {
+        const months = Object.keys(view);
+        const interestedMonths = months.slice(2, 10);
+
+        let max = 0;
+        let maxRangeMonth = false;
+        for (const [month, value] of Object.entries(view)) {
+            if (interestedMonths.includes(month)) {
+                if (value.RANGE > max) {
+                    max = value.RANGE;
+                    maxRangeMonth = month;
+                }
+            }
+        }
+        const maxD = {};
+        maxD[maxRangeMonth] = max;
+        return maxD;
+    }
+
 
       function getDatesInDb(_db = newDb) {
           const dates = Object.keys(_db);
@@ -804,11 +845,12 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
       return {
           monthsD: monthsD,
           db:newDb,
-          table: table,
-          tableData: tableData,
+          table,
+          tableData,
           datesInDb: getDatesInDb,
-          maxRangeD: maxRangeD,
-          monthDaysView: monthDaysView,
+          maxRangeD,
+          maxVolumeD,
+          monthDaysView,
           ACTION,
           ACTIONS
       };
@@ -852,9 +894,11 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
   }
 
   function highlightRow() {
-      const maxRangeMonth = Object.keys(fcpo.maxRangeD)[0];
+      console.log(`%c==> [highlightRow]`, "color: yellow");
+      d.table(fcpo.maxVolumeD)
+      const maxMonth = Object.keys(fcpo.maxVolumeD)[0];
       // const row = $(`table tr:nth-child(${MONTH_INDEX + 1})`);
-      const row = $(`table tr:contains(${maxRangeMonth})`);
+      const row = $(`table tr:contains(${maxMonth})`);
       row.css('border', '2px solid red');
   }
 
