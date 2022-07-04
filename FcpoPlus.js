@@ -937,10 +937,8 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
 
   function highlightRow() {
     console.log(`%c==> [highlightRow]`, "color: yellow");
-    d.table(fcpo.maxVolumeD);
-    const maxMonth = Object.keys(fcpo.maxVolumeD)[0];
-    // const row = $(`table tr:nth-child(${MONTH_INDEX + 1})`);
-    const row = $(`table tr:contains(${maxMonth})`);
+    const maxMonth = getMaxVolumeMonth();
+    const row = $(`table tr.odd:contains(${maxMonth})`);
     row.css("border", "2px solid red");
   }
 
