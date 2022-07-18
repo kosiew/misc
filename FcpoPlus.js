@@ -2,7 +2,7 @@
 // @name         Bursa enhancements
 // @namespace    https://wpcomhappy.wordpress.com/
 // @icon         https://raw.githubusercontent.com/soufianesakhi/feedly-filtering-and-sorting/master/web-ext/icons/128.png
-// @version      1.7
+// @version      1.8
 // @description  Tool for enhancing Bursa
 // @author       Siew "@xizun"
 // @match        https://www.bursamalaysia.com/market_information/*
@@ -29,7 +29,9 @@
     (MORNING_START = 10.75),
     (MORNING_END = 12.75),
     (NOON_START = 14.75),
-    (NOON_END = 18.26);
+    (NOON_END = 18.26),
+    (NIGHT_START = 21.25),
+    (NIGHT_END = 23.75);
 
   const KEY = "FCPO";
 
@@ -58,7 +60,7 @@
 
   // for debugging
   const d = (function () {
-    const debug = true;
+    const debug = false;
     const messages = [];
     const MAX_LOG_MESSAGES = 5;
 
@@ -495,7 +497,7 @@ query().select().from(data).where(aug).execute();
 
     // get months D from bursa page
     function getMonthsD() {
-      const trs = $("tbody tr");
+      const trs = $("tbody tr.odd");
       let monthsD = {};
       d.group("getMonthsD");
       for (let index = 0; index <= MAX_MONTH_INDEX; index++) {
@@ -578,6 +580,11 @@ query().select().from(data).where(aug).execute();
     d.group("today View - with max, min change");
     // view contains additional columns - RANGE (high - low), HIGH_CHANGE (high - settlement), LOW_CHANGE (low - settlement)
     const todayView = getMonthsView(monthsD);
+    console.log(
+      "%c   👀  ==>  👀   ",
+      "background-color: green; color: yellow",
+      { todayView }
+    );
     const maxRangeD = getMax(todayView, "RANGE");
     const maxVolumeD = getMax(todayView, "VOLUME");
     d.table(todayView);
@@ -904,7 +911,8 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
       const decimalHours = getDecimalHours();
       if (
         (decimalHours > MORNING_START && decimalHours < MORNING_END) ||
-        (decimalHours > NOON_START && decimalHours < NOON_END)
+        (decimalHours > NOON_START && decimalHours < NOON_END) ||
+        (decimalHours > NIGHT_START && decimalHours < NIGHT_END)
       ) {
         const changeMessage = `FCPO ${maxVolumeMonth} change is ${change}.`;
         const message =
@@ -932,6 +940,13 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
 
   function getMaxVolumeMonth() {
     const maxVolumeMonth = Object.keys(fcpo.maxVolumeD)[0];
+    const maxVolumeD = fcpo.maxVolumeD;
+    console.log(
+      "%c   👀  ==>  👀   ",
+      "background-color: green; color: yellow",
+      { maxVolumeMonth },
+      { maxVolumeD }
+    );
     return maxVolumeMonth;
   }
 
@@ -1020,23 +1035,27 @@ Limits (risk ${RISK_MARGIN}): ${limitUp} - ${limitDown}`
 
   function reload() {
     const decimalHours = getDecimalHours();
-    const reload = decimalHours < 18.26;
+    const reload = decimalHours < NIGHT_END;
     d.log(`decimalHours = ${decimalHours}, reload = ${reload}`);
     d.log(`ACTIONS = ${fcpo.ACTIONS}`);
     if (reload) {
       let waitHours;
       if (
         (decimalHours > MORNING_START && decimalHours < MORNING_END) ||
-        (decimalHours > NOON_START && decimalHours < NOON_END)
+        (decimalHours > NOON_START && decimalHours < NOON_END) ||
+        (decimalHours > NIGHT_START && decimalHours < NIGHT_END)
       ) {
         d.log("In trading session");
         waitHours = 0.25;
       } else if (decimalHours <= MORNING_START) {
         d.log("before morning trade session");
         waitHours = MORNING_START - decimalHours;
-      } else if (decimalHours >= MORNING_END) {
+      } else if (decimalHours <= NOON_START) {
         d.log("after morning trade session");
         waitHours = NOON_START - decimalHours;
+      } else if (decimalHours <= NIGHT_START) {
+        d.log("after morning trade session");
+        waitHours = NIGHT_START - decimalHours;
       }
       const waitMiliseconds = waitHours * 60 * 60 * 1000;
       timer.setTimeOut(
